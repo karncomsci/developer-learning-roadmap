@@ -8,6 +8,9 @@ tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 require (
 	github.com/gofiber/fiber/v3 v3.7.0
+	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.13.0
+	github.com/joho/godotenv v1.5.1
 	github.com/oapi-codegen/runtime v1.9.0
 )
 
@@ -19,7 +22,9 @@ require (
 	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
 	github.com/gofiber/schema v1.9.3 // indirect
 	github.com/gofiber/utils/v2 v2.6.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect

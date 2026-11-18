@@ -8,7 +8,7 @@ import (
 )
 
 func TestHealthz(t *testing.T) {
-	app := NewApp(NewServer())
+	app := NewApp(NewServer(nil))
 
 	res, err := app.Test(httptest.NewRequest(http.MethodGet, "/healthz", nil))
 	if err != nil {
@@ -27,7 +27,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestUnknownRouteUsesErrorFormat(t *testing.T) {
-	app := NewApp(NewServer())
+	app := NewApp(NewServer(nil))
 
 	res, err := app.Test(httptest.NewRequest(http.MethodGet, "/nope", nil))
 	if err != nil {

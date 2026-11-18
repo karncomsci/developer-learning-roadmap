@@ -14,7 +14,7 @@
 ```sh
 npm install                 # Supabase CLI (ใช้ผ่าน npx supabase)
 cd web && npm install && cp .env.example .env.local
-cd ../api && cp .env.example .env
+cd ../api && cp .env.example .env   # Go อ่าน api/.env ให้เองตอนรันในเครื่อง
 ```
 
 ## รันในเครื่อง
@@ -35,13 +35,18 @@ cd web && npm run dev
 
 Supabase Studio อยู่ที่ http://localhost:54323 หยุดด้วย `npx supabase stop`
 
-## สร้างโค้ดจาก openapi.yaml
+## สร้างโค้ด (generate)
 
-แก้ `openapi/openapi.yaml` แล้วรันทั้งสองฝั่ง (CI ตรวจว่า commit โค้ดที่ generate แล้ว):
+CI ตรวจว่า commit โค้ดที่ generate แล้วทุกครั้ง
 
 ```sh
+# หลังแก้ openapi/openapi.yaml
 cd api && go generate ./...
 cd web && npm run gen:api
+
+# หลังแก้ query ใน api/internal/store/queries หรือ migration (sqlc ต้องใช้ cgo จึงรันผ่าน Docker)
+# PowerShell, จาก root ของ repo:
+docker run --rm -v "${PWD}:/src" -w /src/api sqlc/sqlc:1.31.1 generate
 ```
 
 ## Migration
@@ -55,6 +60,11 @@ npx supabase db reset               # ทดสอบในเครื่อง
 
 ```sh
 cd api && go vet ./... && go test ./...
+
+# integration test กับ Postgres ในเครื่อง (ต้อง supabase start ก่อน ข้อมูลทดสอบถูก rollback ไม่ค้าง)
+# PowerShell:
+$env:TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"; go test ./...
+
 cd web && npm run lint && npm run typecheck && npm run build
 ```
 

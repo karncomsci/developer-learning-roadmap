@@ -1,0 +1,602 @@
+openapi: 3.0.3
+info:
+  title: Developer Roadmap API
+  version: 1.0.0
+  description: >
+    Contract between the Next.js web app and the Go API. Domain terms follow
+    GLOSSARY.md; rules referenced as R1, Q3, etc. are defined in docs/SPEC.md section 5.
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      tags: [system]
+      responses:
+        "200":
+          description: Service is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /v1/roles:
+    get:
+      operationId: listRoles
+      tags: [roles]
+      description: All Roles ordered by createdAt ascending (R3).
+      responses:
+        "200":
+          description: Roles with Role Progress counts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleSummary"
+    post:
+      operationId: createRole
+      tags: [roles]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+      responses:
+        "201":
+          description: Role created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleSummary"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /v1/roles/{slug}:
+    get:
+      operationId: getRoleBySlug
+      tags: [roles]
+      parameters:
+        - $ref: "#/components/parameters/Slug"
+      responses:
+        "200":
+          description: One Role with all Topics, Prerequisites, Resources and images.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleDetail"
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/roles/{roleId}:
+    patch:
+      operationId: updateRole
+      tags: [roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoleRequest"
+      responses:
+        "200":
+          description: Role updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleSummary"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+    delete:
+      operationId: deleteRole
+      tags: [roles]
+      description: Deletes the Role and everything inside it (R2).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      responses:
+        "204": { description: Role deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/roles/{roleId}/topics:
+    post:
+      operationId: createTopic
+      tags: [topics]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTopicRequest"
+      responses:
+        "201":
+          description: Topic created with status not_started (T2).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/CrossRole" }
+
+  /v1/topics/{topicId}:
+    patch:
+      operationId: updateTopic
+      tags: [topics]
+      description: >
+        Updates a Topic. When prerequisiteIds is present it replaces the whole
+        Prerequisite set (Q1-Q4 apply).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TopicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTopicRequest"
+      responses:
+        "200":
+          description: Topic updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/CrossRole" }
+    delete:
+      operationId: deleteTopic
+      tags: [topics]
+      description: Deletes the Topic, its Prerequisites in both directions, Resources and images (T3).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TopicId"
+      responses:
+        "204": { description: Topic deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/topics/{topicId}/status:
+    put:
+      operationId: setTopicStatus
+      tags: [topics]
+      description: Sets the Learning Status. statusChangedAt only moves when the value changes (S2).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TopicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetStatusRequest"
+      responses:
+        "200":
+          description: Status stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/topics/{topicId}/resources:
+    post:
+      operationId: createResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TopicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResourceRequest"
+      responses:
+        "201":
+          description: Resource created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/resources/{resourceId}:
+    patch:
+      operationId: updateResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResourceRequest"
+      responses:
+        "200":
+          description: Resource updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ResourceId"
+      responses:
+        "204": { description: Resource deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /v1/topics/{topicId}/images:
+    post:
+      operationId: uploadTopicImage
+      tags: [images]
+      description: Accepts png, jpg or webp detected from file content (I1), at most 4 MB (I2).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TopicId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Image stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicImage"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/FileTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+
+  /v1/images/{imageId}:
+    delete:
+      operationId: deleteTopicImage
+      tags: [images]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ImageId"
+      responses:
+        "204": { description: Image deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: HS256, 60 s lifetime, aud "roadmap-api", sub = Owner's GitHub user ID.
+
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/Slug" }
+    RoleId:
+      name: roleId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ResourceId:
+      name: resourceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ImageId:
+      name: imageId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    ValidationFailed:
+      description: validation_failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: unauthorized
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: forbidden
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: not_found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: slug_taken or prerequisite_cycle
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    CrossRole:
+      description: prerequisite_cross_role
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    FileTooLarge:
+      description: file_too_large
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    UnsupportedMediaType:
+      description: unsupported_media_type
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+          description: For prerequisite_cycle, contains "cycle", the Topic IDs forming the cycle.
+
+    ErrorCode:
+      type: string
+      enum:
+        - validation_failed
+        - unauthorized
+        - forbidden
+        - not_found
+        - slug_taken
+        - prerequisite_cycle
+        - prerequisite_cross_role
+        - file_too_large
+        - unsupported_media_type
+        - internal_error
+
+    Slug:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+
+    LearningStatus:
+      type: string
+      enum: [not_started, learning, done]
+
+    ResourceType:
+      type: string
+      enum: [article, video, official_docs, course, other]
+
+    RoleProgress:
+      type: object
+      description: Counts only; percentage is computed by the client (P3).
+      required: [done, learning, total]
+      properties:
+        done: { type: integer, minimum: 0 }
+        learning: { type: integer, minimum: 0 }
+        total: { type: integer, minimum: 0 }
+
+    RoleSummary:
+      type: object
+      required: [id, slug, name, description, icon, color, progress, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string }
+        description: { type: string }
+        icon: { type: string, nullable: true }
+        color: { type: string, nullable: true }
+        progress: { $ref: "#/components/schemas/RoleProgress" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    RoleDetail:
+      allOf:
+        - $ref: "#/components/schemas/RoleSummary"
+        - type: object
+          required: [topics]
+          properties:
+            topics:
+              type: array
+              items: { $ref: "#/components/schemas/Topic" }
+
+    Topic:
+      type: object
+      required:
+        [id, roleId, title, descriptionMd, status, statusChangedAt, prerequisiteIds, resources, images, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        roleId: { type: string, format: uuid }
+        title: { type: string }
+        descriptionMd: { type: string }
+        status: { $ref: "#/components/schemas/LearningStatus" }
+        statusChangedAt: { type: string, format: date-time }
+        prerequisiteIds:
+          type: array
+          description: Topics that should be learned before this one.
+          items: { type: string, format: uuid }
+        resources:
+          type: array
+          description: Ordered by createdAt ascending (T4).
+          items: { $ref: "#/components/schemas/Resource" }
+        images:
+          type: array
+          description: Ordered by createdAt ascending (T4).
+          items: { $ref: "#/components/schemas/TopicImage" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Resource:
+      type: object
+      required: [id, topicId, title, url, type, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        topicId: { type: string, format: uuid }
+        title: { type: string }
+        url: { type: string, format: uri }
+        type: { $ref: "#/components/schemas/ResourceType" }
+        createdAt: { type: string, format: date-time }
+
+    TopicImage:
+      type: object
+      required: [id, topicId, url, contentType, sizeBytes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        topicId: { type: string, format: uuid }
+        url:
+          type: string
+          format: uri
+          description: Public Storage URL.
+        contentType:
+          type: string
+          enum: [image/png, image/jpeg, image/webp]
+        sizeBytes: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    CreateRoleRequest:
+      type: object
+      required: [slug, name]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 500 }
+        icon: { type: string, maxLength: 64, nullable: true }
+        color: { type: string, pattern: "^#[0-9a-fA-F]{6}$", nullable: true }
+
+    UpdateRoleRequest:
+      type: object
+      minProperties: 1
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 500 }
+        icon: { type: string, maxLength: 64, nullable: true }
+        color: { type: string, pattern: "^#[0-9a-fA-F]{6}$", nullable: true }
+
+    CreateTopicRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        descriptionMd: { type: string, maxLength: 20000 }
+        prerequisiteIds:
+          type: array
+          maxItems: 50
+          items: { type: string, format: uuid }
+
+    UpdateTopicRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        descriptionMd: { type: string, maxLength: 20000 }
+        prerequisiteIds:
+          type: array
+          maxItems: 50
+          description: Replaces the whole Prerequisite set when present.
+          items: { type: string, format: uuid }
+
+    SetStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: "#/components/schemas/LearningStatus" }
+
+    CreateResourceRequest:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        url: { type: string, format: uri, maxLength: 2048 }
+        type: { $ref: "#/components/schemas/ResourceType" }
+
+    UpdateResourceRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        url: { type: string, format: uri, maxLength: 2048 }
+        type: { $ref: "#/components/schemas/ResourceType" }

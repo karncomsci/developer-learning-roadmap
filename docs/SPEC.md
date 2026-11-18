@@ -359,7 +359,7 @@ REST + JSON ภายใต้ `/v1` นิยามเต็มอยู่ใ�
 | ขั้น | งาน | เสร็จเมื่อ |
 |---|---|---|
 | M0 | `git init` + remote, ย้าย SPEC ไป `/docs`, วางโครง repo, Supabase ในเครื่อง, migration แรก, `openapi.yaml`, สร้าง type สองฝั่ง, README, CI | `supabase start` ขึ้น, Go และ Next.js build ผ่าน, `/healthz` ตอบ, CI เขียวบน PR แรก |
-| M1 | เลือกโฮสต์ของ API, สร้าง Supabase cloud, Dockerfile ของ API, CD ครบสามขั้น, API และหน้า card grid แบบอ่านอย่างเดียว พร้อม seed | เปิด `/th` ในเครื่องเห็นการ์ดจาก seed และเว็บจริงเปิดได้ (ว่าง) ผ่าน CD |
+| M1 | ตั้ง sqlc (บน Windows ต้องรันผ่าน Docker หรือ binary เพราะต้องใช้ cgo), เลือกโฮสต์ของ API, สร้าง Supabase cloud, Dockerfile ของ API, CD ครบสามขั้น, API และหน้า card grid แบบอ่านอย่างเดียว พร้อม seed | เปิด `/th` ในเครื่องเห็นการ์ดจาก seed และเว็บจริงเปิดได้ (ว่าง) ผ่าน CD |
 | M2 | ล็อกอิน Owner, JWT, CRUD ของ Role | Owner สร้าง แก้ ลบ Role ได้ และคำขอที่ไม่มี token ถูกปฏิเสธ |
 | M3 | CRUD ของ Topic, Learning Status, Role Progress | เปลี่ยนสถานะแล้ว % บนการ์ดเปลี่ยนตาม |
 | M4 | Prerequisite, การตรวจวง, ผัง, Ready Topic และแผงด้านข้าง | ผังวาดถูกต้อง Ready Topic ถูกเน้น และการเพิ่มเส้นที่ทำให้วนถูกปฏิเสธพร้อมบอกวง |

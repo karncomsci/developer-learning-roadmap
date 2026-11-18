@@ -1,0 +1,8 @@
+{
+  "name": "developer-learning-roadmap",
+  "private": true,
+  "description": "Root tooling only (Supabase CLI). App code lives in /web and /api.",
+  "devDependencies": {
+    "supabase": "^3.2.0"
+  }
+}

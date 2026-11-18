@@ -2,7 +2,7 @@
 
 สถานะ: Owner ยืนยันแล้ว · วันที่: 2026-11-18
 
-คำศัพท์ทั้งหมดในเอกสารนี้ใช้ตาม `GLOSSARY.md` (Role, Topic, Learning Status, Role Progress, Prerequisite, Ready Topic, Resource, Owner, Visitor) การตัดสินใจเชิงสถาปัตยกรรมอยู่ใน `docs/adr/0001`–`0004`
+คำศัพท์ทั้งหมดในเอกสารนี้ใช้ตาม `GLOSSARY.md` (Role, Topic, Learning Status, Role Progress, Prerequisite, Ready Topic, Resource, Owner, Visitor) การตัดสินใจเชิงสถาปัตยกรรมอยู่ใน `docs/adr/0001`–`0005`
 
 ## 1. เป้าหมาย
 
@@ -70,7 +70,7 @@ README.md          คำสั่งสำหรับพัฒนาในเ�
 | Type ฝั่ง frontend | openapi-typescript |
 | ข้อมูล | Supabase Postgres + Storage, Supabase CLI ในเครื่อง |
 | ทดสอบ | go test, Playwright |
-| CI/CD | GitHub Actions, GHCR, Vercel GitHub integration |
+| CI/CD | GitHub Actions, GHCR, Fly.io (Go API, ADR 0005), Vercel CLI + Vercel Git integration (preview) |
 
 ใช้เวอร์ชัน stable ล่าสุด ณ วันเริ่ม M0 แล้วล็อกไว้ (`go.mod`, `package-lock.json`, `.nvmrc`) ฝั่ง Node ใช้ npm
 
@@ -321,8 +321,10 @@ REST + JSON ภายใต้ `/v1` นิยามเต็มอยู่ใ�
 ลำดับ: migration → api → web
 
 1. migration: GitHub Actions รัน `supabase db push` ไปยัง Supabase production ผ่าน GitHub Environment ที่ต้องให้ Owner กดอนุมัติทุกครั้ง
-2. api: GitHub Actions build Docker image แล้ว push ขึ้น GHCR จากนั้นสั่ง deploy ไปยังโฮสต์
-3. web: Vercel GitHub integration deploy production (PR ได้ preview deployment)
+2. api: GitHub Actions build Docker image แล้ว push ขึ้น GHCR (public) จากนั้น `flyctl deploy --image` ไปยัง Fly.io region Singapore
+3. web: GitHub Actions deploy production ด้วย Vercel CLI (ปิดการ deploy `main` อัตโนมัติของ Git integration ไว้เพื่อรักษาลำดับ) ส่วน PR ได้ preview deployment จาก Git integration
+
+ขั้นตอนตั้งค่าครั้งแรกและรายการ secret อยู่ใน `docs/DEPLOY.md`
 
 ## 11. การทดสอบ
 
@@ -371,6 +373,6 @@ M4 เป็นขั้นที่เสี่ยงที่สุด เพ�
 
 ## 13. เรื่องที่ยังเปิดอยู่
 
-- โฮสต์ของ Go API: เลือกตอนเริ่ม M1 โดยเทียบตัวเลือกพร้อมราคาปัจจุบัน
+- ~~โฮสต์ของ Go API~~: เลือก Fly.io แล้ว (ADR 0005)
 - เงื่อนไข free tier ของ Supabase: ต้องเช็คตอนสร้าง cloud project ใน M1
 - ถ้าจะนำเนื้อหาจาก roadmap.sh มาใส่ ต้องอ่านไฟล์ LICENSE ใน repo ของเขาก่อน

@@ -1,0 +1,5 @@
+.env
+.env.*
+bin/
+*.exe
+fly.toml
